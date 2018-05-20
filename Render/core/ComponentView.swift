@@ -160,7 +160,7 @@ open class ComponentView<S: StateType>: UIView, ComponentViewType {
 
   /// The (current) view associated to the root node.
   public private(set) var rootView: UIView!
-  private lazy var contentView: UIView = {
+  public private(set) lazy var contentView: UIView = {
     return UIView()
   }()
 
