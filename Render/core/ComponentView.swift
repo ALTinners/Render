@@ -151,6 +151,8 @@ open class ComponentView<S: StateType>: UIView, ComponentViewType {
       root.key = newValue
     }
   }
+    
+    public var renderTimeCallback: ((Double) -> Void)? = nil
 
   /// Alternative to subclassing ComponentView.
   public var renderBlock: RenderBlock?
@@ -250,7 +252,7 @@ open class ComponentView<S: StateType>: UIView, ComponentViewType {
       internalUpdate(in: size, options: passOptions)
     }
 
-    debugReconcileTime("\(Swift.type(of: self)).render", startTime: startTime)
+    debugReconcileTime("\(Swift.type(of: self)).render", startTime: startTime, callback: renderTimeCallback)
     didUpdate()
     if shouldInvokeDidMount {
       componentDidMount()
@@ -466,7 +468,7 @@ open class StatelessPrototypeCellComponentView: StatelessComponentView { }
 
 // MARK: - Utilities
 
-func debugReconcileTime(_ label: String, startTime: CFAbsoluteTime, threshold: CFAbsoluteTime = 16){
+func debugReconcileTime(_ label: String, startTime: CFAbsoluteTime, callback: ((Double)->Void)?, threshold: CFAbsoluteTime = 16){
   let timeElapsed = (CFAbsoluteTimeGetCurrent() - startTime)*1000
 
   // - Note: 60fps means you need to render a frame every ~16ms to not drop any frames.
@@ -474,6 +476,7 @@ func debugReconcileTime(_ label: String, startTime: CFAbsoluteTime, threshold: C
   if timeElapsed > threshold  {
     print(String(format: "\(label) (%2f) ms.", arguments: [timeElapsed]))
   }
+   callback?(timeElapsed)
 }
 
 // MARK: Equatable Options
