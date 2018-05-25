@@ -48,8 +48,7 @@ public enum UIComponentCanvasOption: Int {
   case flexibleHeight
   /// Default canvas option.
   public static func defaults() -> [UIComponentCanvasOption] {
-    return [.useBoundsAsCanvasSize,
-            .flexibleHeight]
+    return [.useBoundsAsCanvasSize]
   }
 }
 
