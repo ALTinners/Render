@@ -133,6 +133,7 @@ public extension UIView {
   public func onGestureRecognizer<T: UIGestureRecognizer>(
     type: T.Type,
     key: NSString,
+    modifyRecognizer: ((T)->T) = { handler in return handler },
     numberOfTapsRequired: Int = 1,
     numberOfTouchesRequired: Int = 1,
     direction: UISwipeGestureRecognizerDirection = .down,
@@ -141,7 +142,7 @@ public extension UIView {
     let wrapper = WeakGestureRecognizer()
     wrapper.handler = handler
     let selector = #selector(WeakGestureRecognizer.handle(sender:))
-    let gesture = T(target: wrapper, action: selector)
+    let gesture = modifyRecognizer(T(target: wrapper, action: selector))
     wrapper.object = gesture
     if let tapGesture = gesture as? UITapGestureRecognizer {
       tapGesture.numberOfTapsRequired = numberOfTapsRequired
