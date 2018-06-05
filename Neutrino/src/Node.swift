@@ -1,5 +1,8 @@
 import UIKit
 
+// An open callback to add in some callback functionality for recording and profiling build time
+public var reconciliationCallback: ((Double)->Void)? = nil
+
 // MARK: - UINodeDelegateProtocol
 
 public protocol UINodeDelegateProtocol: class {
@@ -544,4 +547,5 @@ func debugReconcileTime(_ label: String, startTime: CFAbsoluteTime, threshold: C
   if timeElapsed > threshold  {
     print(String(format: "\(label) (%2f) ms.", arguments: [timeElapsed]))
   }
+    reconciliationCallback?(timeElapsed)
 }
