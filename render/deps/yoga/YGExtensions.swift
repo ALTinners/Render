@@ -130,7 +130,7 @@ extension UIView {
 }
 
 extension UIView {
-  func onGestureRecognizer<T: UIGestureRecognizer>(
+  public func onGestureRecognizer<T: UIGestureRecognizer>(
     type: T.Type,
     key: NSString,
     modifyRecognizer: ((T)->T) = { handler in return handler },
