@@ -33,7 +33,7 @@ class TransitionFromDemoViewController: UIComponentViewController<TransitionFrom
 
 class TransitionToDemoViewController: UIComponentViewController<TransitionToComponent> {
   override func viewDidLoad() {
-    view.backgroundColor = S.Palette.primary.color
+    view.backgroundColor = S.palette.primary.color
     canvasView.backgroundColor = view.backgroundColor
     super.viewDidLoad()
   }
@@ -52,7 +52,7 @@ class TransitionToDemoViewController: UIComponentViewController<TransitionToComp
 class Transition: UISceneTransition {
 
   override func transitionDuration(context: UIViewControllerContextTransitioning?) -> TimeInterval {
-    return 2
+    return 1
   }
 
   override func transition(context: UIViewControllerContextTransitioning?) {

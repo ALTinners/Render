@@ -1487,7 +1487,7 @@ public struct AnyExpression: CustomStringConvertible {
     constants: [String: Any] = [:],
     symbols: [Symbol: SymbolEvaluator] = [:],
     evaluator: Evaluator? = nil
-    ) {
+  ) {
     self.init(
       Expression.parse(expression),
       options: options,
@@ -1620,13 +1620,12 @@ public struct AnyExpression: CustomStringConvertible {
     description = expression.description
 
     // Build Expression
-    let expression = Expression(expression,
-                                options: options
-                                  .subtracting(.boolSymbols)
-                                  .union(.pureSymbols),
-                                constants: numericConstants,
-                                arrays: arrayConstants,
-                                symbols: pureSymbols) { symbol, args in
+    let expression = Expression(
+      expression,
+      options: options.subtracting(.boolSymbols).union(.pureSymbols),
+      constants: numericConstants,
+      arrays: arrayConstants,
+      symbols: pureSymbols) { symbol, args in
         var stored = false
         let anyArgs: [Any] = args.map {
           if let value = load($0) {
@@ -1772,7 +1771,7 @@ private extension AnyExpression {
     if isNil(anyValue) {
       return nil
     }
-    throw AnyExpression.Error.message("Return type mismatch: \(type(of: anyValue)) is not compatible with \(T.self)")
+    throw AnyExpression.Error.message("mismatch: \(type(of: anyValue)) and not \(T.self)")
   }
 
   // Unwraps a potentially optional value or throws if nil

@@ -3,12 +3,49 @@ import UIKit
 
 // MARK: - UIStylesheet
 
+#if swift(>=4.2)
+/// Shorthand to access the default global stylesheet.
+public let S = UIStylesheet().style
+#endif
+
 public struct UIStylesheet {
   /// Returns the stylesheet rule for the given path (e.g. Palette.black).
   /// - note: You can access to the associated value bu
   static func get(style: String, name: String) -> UIStylesheetRule? {
     return UIStylesheetManager.default.rule(style: style, name: name)
   }
+
+  #if swift(>=4.2)
+  /// Stylesheet styles dynamic lookup.
+  public let style = StyleDynamicLookup()
+
+  @dynamicMemberLookup public struct RuleDynamicLookup: UIStyleProtocol {
+    /// The style name.
+    public let id: String
+    /// Builds a dynamic lookup with the given style.
+    init(id: String) {
+      self.id = id
+    }
+    /// Applies this style to the view passed as argument.
+    public func apply(to view: UIView) {
+      UIStylesheetApplyStyle(name: id, to: view)
+    }
+
+    public subscript(dynamicMember member: String) -> UIStylesheetRule {
+      let manager = UIStylesheetManager.default
+      guard let rule = manager.rule(style: id, name: member) else {
+        fatalError("error: \(id) does not declare \(member) as a property.")
+      }
+      return rule
+    }
+  }
+
+  @dynamicMemberLookup public struct StyleDynamicLookup  {
+    public subscript(dynamicMember member: String) -> RuleDynamicLookup {
+     return RuleDynamicLookup(id: member)
+    }
+  }
+  #endif
 }
 
 // MARK: - UIStylesheetManager
@@ -186,7 +223,7 @@ public class UIStylesheetRule: CustomStringConvertible {
   /// The key for this value.
   var key: String
   /// The value type.
-  var type: ValueType!
+  var type: ValueType?
   /// The computed value.
   var store: Any?
   /// Whether ther store is of type *ConditionalStoreType*.
@@ -233,6 +270,7 @@ public class UIStylesheetRule: CustomStringConvertible {
   }
   /// Object representation for the *rhs* value of this rule.
   public var object: AnyObject? {
+    guard let type = type else { return NSObject() }
     switch type {
     case .bool, .number, .expression:
       return nsNumber
@@ -251,8 +289,10 @@ public class UIStylesheetRule: CustomStringConvertible {
 
   /// Returns the rule value as the desired return type.
   /// - note: The enum type should be backed by an integer store.
-  public func `enum`<T: UIStylesheetRepresentableEnum>(_ type: T.Type,
-                                                       default: T = T.init(rawValue: 0)!) -> T {
+  public func `enum`<T: UIStylesheetRepresentableEnum>(
+    _ type: T.Type,
+    default: T = T.init(rawValue: 0)!
+  ) -> T {
     return T.init(rawValue: integer) ?? `default`
   }
 
@@ -260,7 +300,7 @@ public class UIStylesheetRule: CustomStringConvertible {
     /// There's a type mismatch between the desired type and the type currently associated to this
     /// rule.
     guard self.type == type else {
-      warn("type mismatch – wanted \(type), found \(self.type).")
+      warn("type mismatch – wanted \(type), found \(String(describing: self.type)).")
       return `default`
     }
     /// The rule is a map {EXPR: VALUE}.
@@ -481,7 +521,7 @@ public class UIStylesheetRule: CustomStringConvertible {
       }
       //let animator = UIViewPropertyAnimator(duration: 1, curve: .easeIn, animations: nil)
       let duration: TimeInterval = parse(numberFromString: args[0]).doubleValue
-      var curve: UIViewAnimationCurve = .linear
+      var curve: UIView.AnimationCurve = .linear
       var damping: CGFloat = CGFloat.nan
       switch args[1] {
       case "easeInOut": curve = .easeInOut
@@ -522,7 +562,7 @@ public class UIStylesheetRule: CustomStringConvertible {
 
   /// A textual representation of this instance.
   public var description: String {
-    return type.rawValue
+    return type?.rawValue ?? "undefined"
   }
 }
 
@@ -610,9 +650,9 @@ public struct UIStylesheetExpression {
       UIStylesheetExpression.exportedConstantsInitialised = true
       NSTextAlignment.export()
       NSLineBreakMode.export()
-      UIImageOrientation.export()
-      UIImageResizingMode.export()
-      UIViewContentMode.export()
+      UIImage.Orientation.export()
+      UIImage.ResizingMode.export()
+      UIView.ContentMode.export()
     }
     return Expression(string,
                       options: [Expression.Options.boolSymbols, Expression.Options.pureSymbols],
@@ -668,124 +708,47 @@ extension NSLineBreakMode: UIStylesheetRepresentableEnum {
   }
 }
 
-extension UIImageOrientation: UIStylesheetRepresentableEnum {
+extension UIImage.Orientation: UIStylesheetRepresentableEnum {
   public static func expressionConstants() -> [String : Double] {
     let namespace = "UIImageOrientation"
     return [
-      "\(namespace).up": Double(UIImageOrientation.up.rawValue),
-      "\(namespace).down": Double(UIImageOrientation.down.rawValue),
-      "\(namespace).left": Double(UIImageOrientation.left.rawValue),
-      "\(namespace).right": Double(UIImageOrientation.right.rawValue),
-      "\(namespace).upMirrored": Double(UIImageOrientation.upMirrored.rawValue),
-      "\(namespace).downMirrored": Double(UIImageOrientation.downMirrored.rawValue),
-      "\(namespace).leftMirrored": Double(UIImageOrientation.leftMirrored.rawValue),
-      "\(namespace).rightMirrored": Double(UIImageOrientation.rightMirrored.rawValue)]
+      "\(namespace).up": Double(UIImage.Orientation.up.rawValue),
+      "\(namespace).down": Double(UIImage.Orientation.down.rawValue),
+      "\(namespace).left": Double(UIImage.Orientation.left.rawValue),
+      "\(namespace).right": Double(UIImage.Orientation.right.rawValue),
+      "\(namespace).upMirrored": Double(UIImage.Orientation.upMirrored.rawValue),
+      "\(namespace).downMirrored": Double(UIImage.Orientation.downMirrored.rawValue),
+      "\(namespace).leftMirrored": Double(UIImage.Orientation.leftMirrored.rawValue),
+      "\(namespace).rightMirrored": Double(UIImage.Orientation.rightMirrored.rawValue)]
   }
 }
 
-extension UIImageResizingMode: UIStylesheetRepresentableEnum {
+extension UIImage.ResizingMode: UIStylesheetRepresentableEnum {
   public static func expressionConstants() -> [String : Double] {
     let namespace = "UIImageResizingMode"
     return [
-      "\(namespace).title": Double(UIImageResizingMode.tile.rawValue),
-      "\(namespace).stretch": Double(UIImageResizingMode.stretch.rawValue)]
+      "\(namespace).title": Double(UIImage.ResizingMode.tile.rawValue),
+      "\(namespace).stretch": Double(UIImage.ResizingMode.stretch.rawValue)]
   }
 }
 
-extension UIViewContentMode: UIStylesheetRepresentableEnum {
+extension UIView.ContentMode: UIStylesheetRepresentableEnum {
   public static func expressionConstants() -> [String : Double] {
     let namespace = "UIViewContentMode"
     return [
-      "\(namespace).scaleToFill": Double(UIViewContentMode.scaleToFill.rawValue),
-      "\(namespace).scaleAspectFit": Double(UIViewContentMode.scaleAspectFit.rawValue),
-      "\(namespace).scaleAspectFill": Double(UIViewContentMode.scaleAspectFill.rawValue),
-      "\(namespace).redraw": Double(UIViewContentMode.redraw.rawValue),
-      "\(namespace).center": Double(UIViewContentMode.center.rawValue),
-      "\(namespace).top": Double(UIViewContentMode.top.rawValue),
-      "\(namespace).bottom": Double(UIViewContentMode.bottom.rawValue),
-      "\(namespace).left": Double(UIViewContentMode.left.rawValue),
-      "\(namespace).right": Double(UIViewContentMode.right.rawValue),
-      "\(namespace).topLeft": Double(UIViewContentMode.topLeft.rawValue),
-      "\(namespace).topRight": Double(UIViewContentMode.topRight.rawValue),
-      "\(namespace).bottomLeft": Double(UIViewContentMode.bottomLeft.rawValue),
-      "\(namespace).bottomRight": Double(UIViewContentMode.bottomRight.rawValue)]
-  }
-}
-
-// MARK: - UIStylesheetProtocol
-
-public protocol UIStylesheetProtocol: UIStyleProtocol {
-  /// The name of the stylesheet rule.
-  var rawValue: String { get }
-  /// The style name.
-  static var styleIdentifier: String { get }
-}
-
-public extension UIStylesheetProtocol {
-  /// The style name.
-  public var styleIdentifier: String {
-    return Self.styleIdentifier
-  }
-  /// Returns the rule associated to this stylesheet enum.
-  public var rule: UIStylesheetRule {
-    guard let rule = UIStylesheetManager.default.rule(
-      style: Self.styleIdentifier,
-      name: rawValue) else {
-        fatalError("Unable to resolve rule \(Self.styleIdentifier).\(rawValue).")
-    }
-    return rule
-  }
-  /// Convenience getter for *UIStylesheetRule.integer*.
-  public var integer: Int {
-    return rule.integer
-  }
-  /// Convenience getter for *UIStylesheetRule.cgFloat*.
-  public var cgFloat: CGFloat {
-    return rule.cgFloat
-  }
-  /// Convenience getter for *UIStylesheetRule.bool*.
-  public var bool: Bool {
-    return rule.bool
-  }
-  /// Convenience getter for *UIStylesheetRule.font*.
-  public var font: UIFont {
-    return rule.font
-  }
-  /// Convenience getter for *UIStylesheetRule.color*.
-  public var color: UIColor {
-    return rule.color
-  }
-  /// Convenience getter for *UIStylesheetRule.string*.
-  public var string: String {
-    return rule.string
-  }
-  /// Convenience getter for *UIStylesheetRule.object*.
-  public var object: AnyObject? {
-    return rule.object
-  }
-  /// Convenience getter for *UIStylesheetRule.enum*.
-  public func `enum`<T: UIStylesheetRepresentableEnum>(_ type: T.Type,
-                                                       default: T = T.init(rawValue: 0)!) -> T {
-    return rule.enum(type, default: `default`)
-  }
-
-  public func apply(to view: UIView) {
-    Self.apply(to: view)
-  }
-  /// Applies the stylesheet to the view passed as argument.
-  public static func apply(to view: UIView) {
-    UIStylesheetApplyStyle(name: Self.styleIdentifier, to: view)
-  }
-}
-
-extension String: UIStyleProtocol {
-  /// The full path for the style {NAMESPACE.STYLE(.MODIFIER)?}.
-  public var styleIdentifier: String {
-    return self
-  }
-  /// Applies this style to the view passed as argument.
-  public func apply(to view: UIView) {
-    UIStylesheetApplyStyle(name: self, to: view)
+      "\(namespace).scaleToFill": Double(UIView.ContentMode.scaleToFill.rawValue),
+      "\(namespace).scaleAspectFit": Double(UIView.ContentMode.scaleAspectFit.rawValue),
+      "\(namespace).scaleAspectFill": Double(UIView.ContentMode.scaleAspectFill.rawValue),
+      "\(namespace).redraw": Double(UIView.ContentMode.redraw.rawValue),
+      "\(namespace).center": Double(UIView.ContentMode.center.rawValue),
+      "\(namespace).top": Double(UIView.ContentMode.top.rawValue),
+      "\(namespace).bottom": Double(UIView.ContentMode.bottom.rawValue),
+      "\(namespace).left": Double(UIView.ContentMode.left.rawValue),
+      "\(namespace).right": Double(UIView.ContentMode.right.rawValue),
+      "\(namespace).topLeft": Double(UIView.ContentMode.topLeft.rawValue),
+      "\(namespace).topRight": Double(UIView.ContentMode.topRight.rawValue),
+      "\(namespace).bottomLeft": Double(UIView.ContentMode.bottomLeft.rawValue),
+      "\(namespace).bottomRight": Double(UIView.ContentMode.bottomRight.rawValue)]
   }
 }
 
@@ -812,51 +775,16 @@ func UIStylesheetMakeStylesheetIdentifier(_ namespace: String,
 /// Merges the styles together and applies the to the view passed as argument.
 func UIStylesheetApplyStyles(_ array: [UIStyleProtocol], to view: UIView) {
   // Filters out the 'nil' styles.
-  let styles = array.filter { $0.styleIdentifier != UIStyle.notApplicableStyleIdentifier }
+  let styles = array.filter { $0.id != UIStyle.notApplicableStyleIdentifier }
   var bridgeDictionary: [String: Any] = [:]
   var bridgeTransitions: [String: UIViewPropertyAnimator] = [:]
   for style in styles {
-    for (key, value) in UIStylesheetManager.default.defs[style.styleIdentifier] ?? [:] {
+    for (key, value) in UIStylesheetManager.default.defs[style.id] ?? [:] {
       bridgeDictionary[key] = value.object
     }
-    for (key, value) in UIStylesheetManager.default.animators[style.styleIdentifier] ?? [:] {
+    for (key, value) in UIStylesheetManager.default.animators[style.id] ?? [:] {
       bridgeTransitions[key] = value
     }
   }
   YGSet(view, bridgeDictionary, bridgeTransitions)
 }
-
-// MARK: - UIStyleProtocol
-
-extension UIStyleProtocol {
-  /// Whether this is an instance of *UINilStyle*.
-  var isNil: Bool {
-    return self is UINilStyle
-  }
-
-  /// Returns the identifier for this style with the desired modifier (analogous to a pseudo
-  /// selector in CSS).
-  /// - note: If the condition passed as argument is false *UINilStyle* is returned.
-  public func byApplyingModifier(named name: String,
-                                 when condition: Bool = true) -> UIStyleProtocol {
-    return condition ? "\(styleIdentifier).\(name)" : UINilStyle.nil
-  }
-  /// Returns this style if the conditioned passed as argument is 'true', *UINilStyle* otherwise.
-  public func when(_ condition: Bool) -> UIStyleProtocol {
-    return condition ? self : UINilStyle.nil
-  }
-
-  /// Returns an array with this style plus all of the modifiers that satisfy the associated
-  /// conditions.
-  public func withModifiers(_ modifiers: [String: Bool]) -> [UIStyleProtocol] {
-    var identifiers: [UIStyleProtocol] = [self]
-    for (modifier, condition) in modifiers {
-      let style = self.byApplyingModifier(named: modifier, when: condition)
-      if !style.isNil {
-        identifiers.append(style)
-      }
-    }
-    return identifiers
-  }
-}
-//#endif

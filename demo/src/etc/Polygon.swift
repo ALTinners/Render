@@ -7,10 +7,10 @@ func makePolygon() -> UINode<UIPolygonView> {
   // - note: You need to specify a custom 'reuseIdentifier.
   return UINode<UIPolygonView>(reuseIdentifier: "polygon", create: {
     let view = UIPolygonView()
-    view.foregroundColor = S.Palette.white.color
+    view.foregroundColor = S.palette.white.color
     view.yoga.width = 44
     view.yoga.height = 44
-    view.yoga.marginRight = S.Margin.medium.cgFloat
+    view.yoga.marginRight = S.margin.medium.cgFloat
     view.depthPreset = .depth1
     return view
   })

@@ -23,10 +23,12 @@ open class UINavigationBarProps: UIProps {
     public var disabled: Bool = false
 
     /// Creates a new bar button.
-    public init(icon: UIImage,
-                title: String? = nil,
-                accessibilityLabel: String? = nil,
-                onSelected: @escaping () -> Void) {
+    public init(
+      icon: UIImage,
+      title: String? = nil,
+      accessibilityLabel: String? = nil,
+      onSelected: @escaping () -> Void
+    ) {
       self.icon = icon
       self.title = title
       self.accessibilityLabel = accessibilityLabel
@@ -83,10 +85,11 @@ open class UINavigationBarProps: UIProps {
 
   /// Extracts the system back button image from a navigation bar.
   private func makeDefaultBackButtonImage() -> UIImage {
-    let image = UIImage.yg_image(from: "←",
-                                 color: style.tintColor,
-                                 font: UIFont.systemFont(ofSize: 22, weight: UIFont.Weight.bold),
-                                 size: CGSize(width: 22, height: 26))
+    let image = UIImage.yg_image(
+      from: "←",
+      color: style.tintColor,
+      font: UIFont.systemFont(ofSize: 22, weight: UIFont.Weight.bold),
+      size: CGSize(width: 22, height: 26))
     return image
   }
 }
@@ -179,7 +182,7 @@ open class UINavigationBarComponent: UIComponent<UINavigationBarState, UINavigat
     // Build the left bar button item.
     func makeLeftButton() -> UIButton {
       let button = UIButton(type: .custom)
-      button.setImage(props.leftButtonItem.icon, for: .normal)
+      button.setImage(props.leftButtonItem.icon, for: UIControl.State.normal)
       button.accessibilityLabel = props.leftButtonItem.accessibilityLabel
       button.yoga.width = props.style.heightWhenNormal
       button.yoga.percent.height = 100%
@@ -195,7 +198,7 @@ open class UINavigationBarComponent: UIComponent<UINavigationBarState, UINavigat
       button.yoga.percent.height = 100%
       button.yoga.marginRight = unit * 4
       button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: UIFont.Weight.regular)
-      button.setTitleColor(props.style.tintColor, for: .normal)
+      button.setTitleColor(props.style.tintColor, for: UIControl.State.normal)
       return button
     }
     // Left node.
@@ -211,9 +214,9 @@ open class UINavigationBarComponent: UIComponent<UINavigationBarState, UINavigat
       if let node = item.customNode { return node(props, state) }
       return UINode<UIButton>(reuseIdentifier: Id.rightBarButton.rawValue, create: makeRightButton){
         $0.view.onTap { _ in item.onSelected() }
-        $0.view.setImage(item.icon, for: .normal)
+        $0.view.setImage(item.icon, for: UIControl.State.normal)
         $0.view.accessibilityLabel = item.accessibilityLabel
-        $0.view.setTitle(item.title, for: .normal)
+        $0.view.setTitle(item.title, for: UIControl.State.normal)
       }
     }
     let right = UINode<UIView>().children(items)
@@ -249,7 +252,7 @@ open class UINavigationBarComponent: UIComponent<UINavigationBarState, UINavigat
     // The title label changes its position and appearance according to the navigation bar
     // state.
     let title = UINode<UILabel>(reuseIdentifier: Id.titleLabel.rawValue) { spec in
-      spec.set(\UILabel.yoga.percent.width, 100%)
+      spec.view.yoga.percent.width = 100%
       spec.set(\UILabel.text, props.title)
       spec.set(\UILabel.textColor, props.style.titleColor)
       if state.isExpanded {
@@ -458,7 +461,7 @@ public struct UINavigationBarDefaultStyle {
   /// The font applied to the button items.
   public var buttonFont: UIFont = UIFont.systemFont(ofSize: 16, weight: UIFont.Weight.regular)
   /// The shadow applied when the navigation bar is expanded.
-  public var depthWhenExpanded: DepthPreset = .none
+  public var depthWhenExpanded: UIDepthPreset = .none
   /// The shadow applied when the navigation bar is in its default mode.
-  public var depthWhenNormal: DepthPreset = .depth2
+  public var depthWhenNormal: UIDepthPreset = .depth2
 }

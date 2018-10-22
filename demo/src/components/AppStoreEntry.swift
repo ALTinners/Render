@@ -26,19 +26,23 @@ struct AppStoreEntry {
           // Lays out the icon and the title.
           UINode<UIView>(layoutSpec: configureRowContainer).children([
             makePolygon(),
-            makeLabel(text: "\(props.title)#\(state.counter)",
-                      layoutSpec: configureLabel),
+            makeLabel(
+              text: "\(props.title)#\(state.counter)",
+              layoutSpec: configureLabel),
             ]),
           // Entry description (shown when the component is expanded).
           UINode<UIView>(layoutSpec: configureDescriptionContainer).children([
-            makeLabel(text: props.desc,
-                      layoutSpec: configureDescriptionLabel),
-            makeButton(text: "Increase",
-                       onTouchUpInside: { [weak self] in self?.onIncrease() })
+            makeLabel(
+              text: props.desc,
+              layoutSpec: configureDescriptionLabel),
+            makeButton(
+              text: "Increase",
+              onTouchUpInside: { [weak self] in self?.onIncrease() })
             ]),
           // Touch overlay that covers the whole component.
-          makeTapRecognizer(onTouchUpInside: { [weak self] in self?.onToggleExpand() },
-                            layoutSpec: configureTappableView),
+          makeTapRecognizer(
+            onTouchUpInside: { [weak self] in self?.onToggleExpand() },
+            layoutSpec: configureTappableView),
           ])
       ])
     }
@@ -58,7 +62,7 @@ struct AppStoreEntry {
     // MARK: - Containers
 
     private func configureMainView(spec: UINode<UIView>.LayoutSpec) {
-      spec.set(\UIView.backgroundColor, S.Palette.primary.color)
+      spec.set(\UIView.backgroundColor, S.palette.primary.color)
     }
 
     // The main content view with the entry background image.
@@ -80,8 +84,8 @@ struct AppStoreEntry {
     private func configureRowContainer(spec: UINode<UIView>.LayoutSpec) {
       spec.set(\UIView.backgroundColor, .clear)
       // The container takes all of the parent's width and 80% of the height.
-      spec.set(\UIView.yoga.percent.width, 100%)
-      spec.set(\UIView.yoga.percent.height, 80%)
+      spec.view.yoga.percent.width = 100%
+      spec.view.yoga.percent.height = 100%
       spec.set(\UIView.yoga.padding, 4)
       // Lays out the children horizontally.
       spec.set(\UIView.yoga.flexDirection, .row)
@@ -92,20 +96,20 @@ struct AppStoreEntry {
     // The dark banner at the bottom of the component showing the entry description.
     private func configureDescriptionContainer(spec: UINode<UIView>.LayoutSpec) {
       // The container takes all of the parent's width and 20% of the height.
-      spec.set(\UIView.yoga.percent.width, 100%)
-      spec.set(\UIView.yoga.percent.height, 20%)
-      spec.set(\UIView.yoga.padding, S.Margin.xsmall.cgFloat)
+      spec.view.yoga.percent.width = 100%
+      spec.view.yoga.percent.height = 20%
+      spec.set(\UIView.yoga.padding, S.margin.xsmall.cgFloat)
       spec.set(\UIView.yoga.justifyContent, .center)
       spec.set(\UIView.yoga.flexDirection, .row)
-      spec.set(\UIView.backgroundColor, S.Palette.text.color)
+      spec.set(\UIView.backgroundColor, S.palette.text.color)
       // The alpha is animated on change.
       spec.set(\UIView.alpha, !state.expanded ? 0 : 1, animator: defaultAnimator())
     }
 
     // The description text.
     private func configureDescriptionLabel(spec: UINode<UILabel>.LayoutSpec) {
-      spec.set(\UILabel.font, S.Typography.small.font)
-      spec.set(\UILabel.textColor, S.Palette.white.color)
+      spec.set(\UILabel.font, S.typography.small.font)
+      spec.set(\UILabel.textColor, S.palette.white.color)
       // The alpha is animated on change.
       spec.set(\UILabel.alpha, !state.expanded ? 0 : 1, animator: defaultAnimator())
       spec.set(\UILabel.yoga.flexGrow, 1)
@@ -116,11 +120,12 @@ struct AppStoreEntry {
 
     // The main title.
     private func configureLabel(spec: UINode<UILabel>.LayoutSpec) {
-      let font: UIFont = state.expanded ? S.Typography.mediumBold.font : S.Typography.medium.font
+      let font: UIFont = state.expanded ?
+        S.typography.mediumBold.font : S.typography.medium.font
       spec.set(\UILabel.yoga.height, 32)
       spec.set(\UILabel.yoga.width, 256)
       spec.set(\UILabel.font, font)
-      spec.set(\UILabel.textColor, S.Palette.white.color)
+      spec.set(\UILabel.textColor, S.palette.white.color)
     }
 
     // MARK: - Overlays
@@ -136,13 +141,13 @@ struct AppStoreEntry {
     // Touch overlay that covers the whole component.
     private func configureTappableView(spec: UINode<UIView>.LayoutSpec) {
       configureAbsoluteOverlay(spec: spec)
-      spec.set(\UIView.yoga.percent.height, 80%)
+      spec.view.yoga.percent.width = 80%
     }
 
     // The overlays have position '.absolute' in order to cover all of the parent's space.
     private func configureAbsoluteOverlay(spec: UINode<UIView>.LayoutSpec) {
-      spec.set(\UIView.yoga.percent.width, 100%)
-      spec.set(\UIView.yoga.percent.height, 100%)
+      spec.view.yoga.percent.width = 100%
+      spec.view.yoga.percent.height = 100%
       spec.set(\UIView.yoga.position, .absolute)
     }
 
@@ -156,28 +161,32 @@ struct AppStoreEntry {
 
 // MARK: - Private
 
-fileprivate func makeLabel(text: String,
-                           layoutSpec: UINode<UILabel>.LayoutSpecClosure?=nil) -> UINode<UILabel> {
+fileprivate func makeLabel(
+  text: String,
+  layoutSpec: UINode<UILabel>.LayoutSpecClosure? = nil
+) -> UINode<UILabel> {
   return UINode<UILabel> { config in
     config.set(\UILabel.text, text)
     config.set(\UILabel.numberOfLines, 0)
-    config.set(\UILabel.textColor, S.Palette.white.color)
+    config.set(\UILabel.textColor, S.palette.white.color)
     layoutSpec?(config)
   }
 }
 
-fileprivate func makeButton(reuseIdentifier: String = "button",
-                            text: String,
-                            onTouchUpInside: @escaping () -> Void = { },
-                            layoutSpec: UINode<UIButton>.LayoutSpecClosure?=nil) -> UINode<UIButton> {
+fileprivate func makeButton(
+  reuseIdentifier: String = "button",
+  text: String,
+  onTouchUpInside: @escaping () -> Void = { },
+  layoutSpec: UINode<UIButton>.LayoutSpecClosure? = nil
+) -> UINode<UIButton> {
   func makeButton() -> UIButton {
     let view = UIButton()
-    view.backgroundColorImage = S.Palette.white.color
-    view.textColor = S.Palette.primary.color
+    view.backgroundColorImage = S.palette.white.color
+    view.textColor = S.palette.primary.color
     view.depthPreset = .depth1
     view.cornerRadius = 2
-    view.yoga.padding = S.Margin.small.cgFloat
-    view.titleLabel?.font = S.Typography.smallBold.font
+    view.yoga.padding = S.margin.small.cgFloat
+    view.titleLabel?.font = S.typography.smallBold.font
     return view
   }
   return UINode<UIButton>(reuseIdentifier: reuseIdentifier, create: makeButton) { config in
@@ -186,9 +195,11 @@ fileprivate func makeButton(reuseIdentifier: String = "button",
   }
 }
 
-fileprivate func makeTapRecognizer(reuseIdentifier: String = "tapRecognizer",
-                                   onTouchUpInside: @escaping () -> Void = { },
-                                   layoutSpec: UINode<UIView>.LayoutSpecClosure?=nil)->UINode<UIView> {
+fileprivate func makeTapRecognizer(
+  reuseIdentifier: String = "tapRecognizer",
+  onTouchUpInside: @escaping () -> Void = { },
+  layoutSpec: UINode<UIView>.LayoutSpecClosure? = nil
+)->UINode<UIView> {
   return UINode<UIView>(reuseIdentifier: reuseIdentifier) { config in
     config.view.onTap { _ in onTouchUpInside() }
     layoutSpec?(config)

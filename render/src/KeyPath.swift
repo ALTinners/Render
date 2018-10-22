@@ -4,17 +4,18 @@
 
 public protocol UIViewKeyPathProtocol {
   /// A unique identifier for the keyPath that is being assigned.
-  var keyPathIdentifier: Int { get }
+  var keyPathIdentifier: String { get }
   /// Apply the computed property value to the view.
   func assign(view: UIView)
   /// Restore the property original value.
   func restore(view: UIView)
 }
 
- public extension UINode {
+public extension UINode {
+
   public final class UIViewKeyPathValue: UIViewKeyPathProtocol {
     /// A unique identifier for the keyPath being assigned.
-    public let keyPathIdentifier: Int
+    public let keyPathIdentifier: String
     /// The [property] application closure.
     private var applyClosure: ((V) -> Void)? = nil
     /// The [property] removal closure.
@@ -22,15 +23,17 @@ public protocol UIViewKeyPathProtocol {
     /// An optional animator for the property.
     private var animator: UIViewPropertyAnimator?
 
-    init<T>(keyPath: ReferenceWritableKeyPath<V, T>,
-            value: @escaping () -> T,
-            animator: UIViewPropertyAnimator? = nil) {
+    init<T>(
+      keyPath: ReferenceWritableKeyPath<V, T>,
+      value: @escaping () -> T,
+      animator: UIViewPropertyAnimator? = nil
+    ) {
       self.keyPathIdentifier = keyPath.identifier
       self.animator = animator
 
       self.applyClosure = { [weak self] (view: V) in
         let value = value()
-        if NSObjectProtocolEqual(lhs: value, rhs: view[keyPath: keyPath]) { return }
+        if NSObjectProtocolEqual(lhs: value, rhs: getKeyPath(keyPath, view: view)) { return }
         self?.apply(view: view, keyPath: keyPath, value: value)
       }
       self.removeClosure = { [weak self] (view: V) in
@@ -38,9 +41,11 @@ public protocol UIViewKeyPathProtocol {
       }
     }
 
-    public convenience init<T>(keyPath: ReferenceWritableKeyPath<V, T>,
-                               value: T,
-                               animator: UIViewPropertyAnimator? = nil) {
+    public convenience init<T>(
+      keyPath: ReferenceWritableKeyPath<V, T>,
+      value: T,
+      animator: UIViewPropertyAnimator? = nil
+    ) {
       self.init(keyPath: keyPath, value: { value }, animator: animator)
     }
 
@@ -49,11 +54,11 @@ public protocol UIViewKeyPathProtocol {
       view.renderContext.initialConfiguration.storeInitialValue(keyPath: keyPath)
       if let animator = animator {
         animator.addAnimations {
-          view[keyPath: keyPath] = value
+          setKeyPath(keyPath, view: view, value: value)
         }
         animator.startAnimation()
       } else {
-        view[keyPath: keyPath] = value
+        setKeyPath(keyPath, view: view, value: value)
       }
     }
 
@@ -61,7 +66,7 @@ public protocol UIViewKeyPathProtocol {
       guard let value = view.renderContext.initialConfiguration.initialValue(keyPath: keyPath) else{
         return
       }
-      view[keyPath: keyPath] = value
+      setKeyPath(keyPath, view: view, value: value)
     }
 
     /// Apply the computed property value to the view.
@@ -83,7 +88,18 @@ public protocol UIViewKeyPathProtocol {
 
 extension AnyKeyPath {
   /// Returns a unique identifier for the keyPath.
-  public var identifier: Int { return hashValue }
+  public var identifier: String {
+    guard let path = _kvcKeyPathString else {
+      print("warning: Trying to set a non-KVC compliant key \(self)")
+      return String(describing: self)
+    }
+    return path
+  }
+
+  public var hashIdentifier: Int {
+    if let path = _kvcKeyPathString { return path.hashValue }
+    return hashValue
+  }
 }
 
 @objc public final class UIRenderConfigurationContainer: NSObject {
@@ -91,7 +107,7 @@ extension AnyKeyPath {
   public weak var node: UINodeProtocol?
   public weak var view: UIView?
   /// The current mutated properties.
-  let appliedConfiguration: [Int: UIViewKeyPathProtocol] = [:]
+  let appliedConfiguration: [String: UIViewKeyPathProtocol] = [:]
   /// The initial value for the propeties that are currenly assigned.
   public let initialConfiguration: UIViewPropertyInitalContainer
   /// Whether the view has been created at the last render pass.
@@ -109,9 +125,7 @@ extension AnyKeyPath {
   }
 
   func storeOldGeometryRecursively() {
-    guard let view = view, view.hasNode else {
-      return
-    }
+    guard let view = view, view.hasNode else { return }
     oldFrame = view.frame
     for subview in view.subviews {
       subview.renderContext.storeOldGeometryRecursively()
@@ -119,9 +133,7 @@ extension AnyKeyPath {
   }
 
   func applyOldGeometryRecursively() {
-    guard let view = view, view.hasNode else {
-      return
-    }
+    guard let view = view, view.hasNode else { return }
     guard !(isNewlyCreated && oldFrame == CGRect.zero) else {
       view.alpha = 0
       return
@@ -133,9 +145,7 @@ extension AnyKeyPath {
   }
 
   func storeNewGeometryRecursively() {
-    guard let view = view, view.hasNode else {
-      return
-    }
+    guard let view = view, view.hasNode else { return }
     newFrame = view.frame
     targetAlpha = view.alpha
     for subview in view.subviews {
@@ -144,9 +154,7 @@ extension AnyKeyPath {
   }
 
   func applyNewGeometryRecursively() {
-    guard let view = view, view.hasNode else {
-      return
-    }
+    guard let view = view, view.hasNode else { return }
     view.frame = newFrame
 
     for subview in view.subviews {
@@ -155,9 +163,7 @@ extension AnyKeyPath {
   }
 
   private func applyTransformationsToNewlyCreatedViews() {
-    guard let view = view, view.hasNode else {
-      return
-    }
+    guard let view = view, view.hasNode else { return }
     if fabs(view.alpha - targetAlpha) > CGFloat.epsilon {
       view.alpha = targetAlpha
     }
@@ -167,10 +173,11 @@ extension AnyKeyPath {
   }
 
   func fadeInNewlyCreatedViews(delay: TimeInterval = 0) {
-    guard let view = view, view.hasNode else {
-      return
-    }
-    UIView.animate(withDuration: 0.16, delay: delay, options: .curveEaseInOut, animations: {
+    guard let view = view, view.hasNode else { return }
+    UIView.animate(
+      withDuration: 0.16, delay: delay,
+      options: UIView.AnimationOptions.curveEaseInOut,
+      animations: {
       view.renderContext.applyTransformationsToNewlyCreatedViews()
     }, completion: nil)
   }
@@ -180,7 +187,7 @@ extension AnyKeyPath {
 
 @objc public final class UIViewPropertyInitalContainer: NSObject {
   weak var view: UIView?
-  @nonobjc var initialValues: [Int: Any] = [:]
+  @nonobjc var initialValues: [String: Any] = [:]
 
   /// Initialize the container with its associated view.
   init(view: UIView) {
@@ -190,13 +197,14 @@ extension AnyKeyPath {
 
   /// Returns (and caches) the initial value for the view.
   @nonobjc func initialValue<V: UIView, P>(keyPath: ReferenceWritableKeyPath<V, P>) -> P? {
-    guard let view: V = castView() else {
-      return nil
-    }
+    guard let view: V = castView() else { return nil }
     guard let value = initialValues[keyPath.identifier] as? P else {
-      let value = view[keyPath: keyPath]
-      initialValues[keyPath.identifier] = value
-      return value
+      if let value = getKeyPath(keyPath, view: view) {
+        initialValues[keyPath.identifier] = value
+        return value
+      } else {
+        return nil
+      }
     }
     return value
   }
@@ -224,3 +232,15 @@ extension AnyKeyPath {
   }
 }
 
+ @inline(__always) func setKeyPath<V, T>(
+   _ keyPath: ReferenceWritableKeyPath<V, T>,
+    view: V,
+   value: T
+  ) -> Void {
+    view[keyPath: keyPath] = value
+ }
+
+ @inline(__always) func getKeyPath<V, T>(_ keyPath: ReferenceWritableKeyPath<V, T>,
+                                         view: V) -> T? {
+    return view[keyPath: keyPath]
+ }

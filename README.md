@@ -1,4 +1,4 @@
-# Render Neutrino [![Swift](https://img.shields.io/badge/swift-4-orange.svg?style=flat)](#) [![Platform](https://img.shields.io/badge/platform-iOS-lightgrey.svg?style=flat)](#) [![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](https://opensource.org/licenses/MIT)
+# Render Neutrino [![Swift](https://img.shields.io/badge/swift-4.*-orange.svg?style=flat)](#) [![Platform](https://img.shields.io/badge/platform-iOS-lightgrey.svg?style=flat)](#) [![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](https://opensource.org/licenses/MIT)
 
 <img src="docs/assets/logo_new.png" width=150 alt="Render" align=right />
 
@@ -49,16 +49,6 @@ curl "https://raw.githubusercontent.com/alexdrone/Render/master/bin/dist.zip" > 
 ```
 
 Drag `RenderNeutrino.framework` in your project and add it as an embedded binary.
-
-### Installing the Tool-chain
-
-(Needs admin privileges)
-
-```
-sudo chown -R $(whoami) /usr/local/bin &&
-sudo curl "https://raw.githubusercontent.com/alexdrone/Render/master/tools/render-generate" > render-generate && mv render-generate /usr/local/bin/render-generate && chmod +x /usr/local/bin/render-generate &&
-sudo curl "https://raw.githubusercontent.com/alexdrone/Render/master/tools/render-watch.sh" > render-watch && mv render-watch /usr/local/bin/render-watch && chmod +x /usr/local/bin/render-watch
-```
 
 # Documentation:
 
