@@ -272,15 +272,15 @@ public class UIStylesheetRule: CustomStringConvertible {
   public var object: AnyObject? {
     guard let type = type else { return NSObject() }
     switch type {
-    case .bool, .number, .expression:
+    case .bool?, .number?, .expression?:
       return nsNumber
-    case .font:
+    case .font?:
       return font
-    case .color:
+    case .color?:
       return color
-    case .string:
+    case .string?:
       return (string as NSString)
-    case .animator:
+    case .animator?:
       return animator
     default:
       return nil

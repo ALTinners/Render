@@ -151,16 +151,22 @@ extension UIView {
     if let swipeGesture = gesture as? UISwipeGestureRecognizer {
       swipeGesture.direction = direction
     }
+
     // Safely remove the old gesture recognizer.
     if let old = gestureRecognizerProxyDictionary.object(forKey: key) as? WeakGestureRecognizer,
       let oldGesture = old.object {
+      gestureRecognizerProxyDictionary.setObject(wrapper, forKey: key)
+      addGestureRecognizer(gesture)
+      
       old.handler = nil
       old.object = nil
       oldGesture.removeTarget(nil, action: nil)
       oldGesture.view?.removeGestureRecognizer(oldGesture)
+    } else {
+      gestureRecognizerProxyDictionary.setObject(wrapper, forKey: key)
+      addGestureRecognizer(gesture)
     }
-    gestureRecognizerProxyDictionary.setObject(wrapper, forKey: key)
-    addGestureRecognizer(gesture)
+
   }
 
   public func onTap(_ handler: @escaping (UIGestureRecognizer) -> Void) {
