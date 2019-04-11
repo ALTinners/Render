@@ -1,7 +1,7 @@
 import UIKit
 
 // An open callback to add in some callback functionality for recording and profiling build time
-public var reconciliationCallback: ((Double)->Void)? = nil
+public var reconciliationCallback: ((Double, Double)->Void)? = nil
 
 // MARK: - UINodeDelegateProtocol
 
@@ -101,10 +101,12 @@ public class UINode<V: UIView>: UINodeProtocol {
       self.canvasSize = size
     }
 
-    public func set<T>(_ keyPath: ReferenceWritableKeyPath<V, T>,
-                       _ value: T,
-                       animator: UIViewPropertyAnimator? = nil) {
-      node.viewProperties[keyPath.hashValue] =
+    public func set<T>(
+      _ keyPath: ReferenceWritableKeyPath<V, T>,
+      _ value: T,
+      animator: UIViewPropertyAnimator? = nil
+    ) -> Void {
+      node.viewProperties[keyPath.identifier] =
           UIViewKeyPathValue(keyPath: keyPath, value: value, animator: animator)
     }
   }
@@ -161,7 +163,7 @@ public class UINode<V: UIView>: UINodeProtocol {
   // Internal.
 
   // The properties for this node.
-  var viewProperties: [Int: UIViewKeyPathValue] = [:]
+  var viewProperties: [String: UIViewKeyPathValue] = [:]
 
   /// Creates a new immutable UI description node.
   /// - parameter reuseIdentifier: Mandatory if the node has a custom creation closure.
@@ -182,11 +184,13 @@ public class UINode<V: UIView>: UINodeProtocol {
   ///   layout.view.backgroundColor = .green
   ///   layout.view.setTitle("FOO", for: .normal)
   /// ```
-  public init(reuseIdentifier: String? = nil,
-              key: String? = nil,
-              create: (() -> V)? = nil,
-              styles: [UIStyleProtocol] = [],
-              layoutSpec: LayoutSpecClosure? = nil) {
+  public init(
+    reuseIdentifier: String? = nil,
+    key: String? = nil,
+    create: (() -> V)? = nil,
+    styles: [UIStyleProtocol] = [],
+    layoutSpec: LayoutSpecClosure? = nil
+  ) {
     self.reuseIdentifier = UINodeReuseIdentifierMake(type: V.self, identifier: reuseIdentifier)
     self._debugType =  String(describing: V.self)
     self.createClosure = create ??  { V() }
@@ -238,7 +242,6 @@ public class UINode<V: UIView>: UINodeProtocol {
       return
     }
     view.renderContext.storeOldGeometryRecursively()
-
     if shouldUpdateNode {
       let spec = LayoutSpec(node: self, view: renderedView, size: bounds)
       // optimisation: applies the stylesheet-defined styles separately in order to merge
@@ -258,7 +261,6 @@ public class UINode<V: UIView>: UINodeProtocol {
           style.apply(to: view)
         }
       }
-
       layoutSpec(spec)
       overrides?(view)
     }
@@ -267,12 +269,10 @@ public class UINode<V: UIView>: UINodeProtocol {
     for child in children {
       child._setup(in: bounds, options: options)
     }
-
     if shouldUpdateNode {
       let config = view.renderContext
       let oldConfigurationKeys = Set(config.appliedConfiguration.keys)
       let newConfigurationKeys = Set(viewProperties.keys)
-
       let configurationToRestore = oldConfigurationKeys.filter { propKey in
         !newConfigurationKeys.contains(propKey)
       }
@@ -282,7 +282,6 @@ public class UINode<V: UIView>: UINodeProtocol {
       for propKey in newConfigurationKeys {
         viewProperties[propKey]?.assign(view: view)
       }
-
       if view.yoga.isEnabled, view.yoga.isLeaf, view.yoga.isIncludedInLayout {
         view.frame.size = CGSize.zero
         view.yoga.markDirty()
@@ -298,22 +297,17 @@ public class UINode<V: UIView>: UINodeProtocol {
       disposedWarning()
       return
     }
-
     _setup(in: bounds, options: options)
-
     let view = requireRenderedView()
     viewProperties = [:]
-
     func computeLayout() {
       // Compute the flexbox layout for the node.
       view.bounds.size = bounds
       view.yoga.applyLayout(preservingOrigin: false)
       view.bounds.size = view.yoga.intrinsicSize
-
       view.yoga.applyLayout(preservingOrigin: false)
       view.frame.normalize()
     }
-
     computeLayout()
     animateLayoutChangesIfNecessary()
   }
@@ -360,7 +354,6 @@ public class UINode<V: UIView>: UINodeProtocol {
       delegate?.nodeDidLayout(self, view: view)
       associatedComponent?.nodeDidLayout(self, view: view)
     }
-
     /// The view has been newly created.
     if shouldInvokeDidMount {
       shouldInvokeDidMount = false
@@ -376,7 +369,6 @@ public class UINode<V: UIView>: UINodeProtocol {
       disposedWarning()
       return
     }
-
     defer {
       bindIfNecessary(renderedView!)
     }
@@ -408,12 +400,10 @@ public class UINode<V: UIView>: UINodeProtocol {
       node.renderedView!.renderContext.isNewlyCreated = true
       parent.insertSubview(node.renderedView!, at: node.index)
     }
-
     // Gets all of the existing subviews.
     var oldSubviews = view?.subviews.filter { view in
       return view.hasNode
     }
-
     for subnode in node.children {
       // Look for a candidate view matching the node.
       let candidateView = oldSubviews?.filter { view in
@@ -444,17 +434,18 @@ public class UINode<V: UIView>: UINodeProtocol {
       disposedWarning()
       return
     }
-
     guard let view = view ?? renderedView?.superview else {
       return
     }
     let size = size ?? view.bounds.size
-
-    let startTime = CFAbsoluteTimeGetCurrent()
+    let startReconcileTime = CFAbsoluteTimeGetCurrent()
     _reconcile(node: self, size: size, view: view.subviews.first, parent: view)
+    let startLayoutTime = CFAbsoluteTimeGetCurrent()
     layout(in: size, options: options)
-
-    debugReconcileTime("\(Swift.type(of: self)).reconcile", startTime: startTime)
+    debugReconcileTime(
+      "\(Swift.type(of: self)).reconcile",
+      startReconcileTime: startReconcileTime,
+      startLayoutTime: startLayoutTime)
   }
 
   // Binding closure.
@@ -464,14 +455,15 @@ public class UINode<V: UIView>: UINodeProtocol {
   /// - parameter target: The target object for the binding.
   /// - parameter keyPath: The property path in the target object.
   /// - note: Declare the property in your target as *weak* in order to prevent retain ciclyes.
-  public func bindView<O: AnyObject, V>(target: O,
-                                        keyPath: ReferenceWritableKeyPath<O, V>) {
+  public func bindView<O: AnyObject, V>(
+    target: O,
+    keyPath: ReferenceWritableKeyPath<O, V>
+  ) -> Void {
     assert(Thread.isMainThread)
     guard !isDisposed else {
       disposedWarning()
       return
     }
-
     bindTarget = target
     bindIfNecessary = { [weak self] (view: UIView) in
       guard let object = self?.bindTarget as? O, let view = view as? V else {
@@ -568,14 +560,19 @@ public enum UINodeOption: Int {
   case preventDelegateCallbacks
 }
 
-func debugReconcileTime(_ label: String, startTime: CFAbsoluteTime, threshold: CFAbsoluteTime = 16){
-  let timeElapsed = (CFAbsoluteTimeGetCurrent() - startTime) * 1000
+func debugReconcileTime(_ label: String,
+                        startReconcileTime: CFAbsoluteTime,
+                        startLayoutTime: CFAbsoluteTime,
+                        threshold: CFAbsoluteTime = 16){
+  let timeReconcileElapsed = (CFAbsoluteTimeGetCurrent() - startReconcileTime) * 1000
+  let timeLayoutElapsed = (CFAbsoluteTimeGetCurrent() - startLayoutTime) * 1000
+  let timeElapsed = timeReconcileElapsed + timeLayoutElapsed
   // - note: 60fps means you need to render a frame every ~16ms to not drop any frames.
   // This is even more important when used inside a cell.
   if timeElapsed > threshold  {
-    print(String(format: "\(label) (%2f) ms.", arguments: [timeElapsed]))
+    print(String(format: "\(label) (%2f) + (%2f) ms.", arguments: [timeReconcileElapsed, timeLayoutElapsed]))
   }
-    reconciliationCallback?(timeElapsed)
+    reconciliationCallback?(timeReconcileElapsed, timeLayoutElapsed)
 }
 
 // MARK: - UINodeShouldUpdateOption

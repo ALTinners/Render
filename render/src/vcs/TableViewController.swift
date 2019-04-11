@@ -1,11 +1,13 @@
 import UIKit
 
-open class UITableComponentViewController: UIBaseViewController,
-                                           UITableViewDelegate,
-                                           UITableViewDataSource,
-                                           UINodeDelegateProtocol,
-                                           UITableComponentCellDelegate,
-                                           UIContextDelegate {
+open class UITableComponentViewController:
+  UIBaseViewController,
+  UITableViewDelegate,
+  UITableViewDataSource,
+  UITableViewDataSourcePrefetching,
+  UINodeDelegateProtocol,
+  UITableComponentCellDelegate,
+  UIContextDelegate {
   /// The canvas view for this ViewController.
   public var tableView: UITableView { return canvasView as! UITableView }
   /// Fades in the content of the cell when the scroll reveals it.
@@ -55,6 +57,7 @@ open class UITableComponentViewController: UIBaseViewController,
     let tableView = UITableView()
     tableView.delegate = self
     tableView.dataSource = self
+    tableView.prefetchDataSource = self
     tableView.contentInset = UIEdgeInsets.zero
     tableView.translatesAutoresizingMaskIntoConstraints = false
     return tableView
@@ -90,8 +93,10 @@ open class UITableComponentViewController: UIBaseViewController,
   /// Render the components visible on screen with the 'options' passed as argument.
   /// - parameter invalidateTableViewLayout: 'true' if you want to force the *UITableView* to
   /// recompute its cells heights, 'false' otherwise.
-  open func setNeedsRenderVisibleComponents(options: [UIComponentRenderOption] = [],
-                                            invalidateTableViewLayout: Bool = false) {
+  open func setNeedsRenderVisibleComponents(
+    options: [UIComponentRenderOption] = [],
+    invalidateTableViewLayout: Bool = false
+  ) -> Void {
     let components = context.pool.allComponent().filter { $0.canvasView != nil }
     shouldSkipAllLayoutCallbacks = !invalidateTableViewLayout
     for component in components {
@@ -110,7 +115,7 @@ open class UITableComponentViewController: UIBaseViewController,
     } else {
       tableView.estimatedRowHeight = 64
     }
-    tableView.rowHeight = UITableViewAutomaticDimension
+    tableView.rowHeight = UITableView.automaticDimension
     tableView.separatorStyle = .none
   }
 
@@ -121,8 +126,10 @@ open class UITableComponentViewController: UIBaseViewController,
   }
 
   /// Notifies the container that the size of its view is about to change.
-  override open func viewWillTransition(to size: CGSize,
-                                        with coordinator: UIViewControllerTransitionCoordinator) {
+  override open func viewWillTransition(
+    to size: CGSize,
+    with coordinator: UIViewControllerTransitionCoordinator
+  ) -> Void {
     super.viewWillTransition(to: size, with: coordinator)
     coordinator.animate(alongsideTransition: { _ in
     }) { [weak self] _ in
@@ -144,12 +151,20 @@ open class UITableComponentViewController: UIBaseViewController,
   ///    return dequeueCell(forComponent: component)
   ///
   /// - note: Override this method if you don't want to rely on the *cellDescriptors* property.
-  @objc open func tableView(_ tableView: UITableView,
-                            cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+  @objc open func tableView(
+    _ tableView: UITableView,
+    cellForRowAt indexPath: IndexPath
+  ) -> UITableViewCell {
     guard cellDescriptors.count > indexPath.row,
       let component = cellDescriptors[indexPath.row].component else { return UITableViewCell() }
     let id = cellDescriptors[indexPath.row].reuseIdentifier
     return dequeueCell(component: component, withReuseIdentifier: id)
+  }
+
+  @objc open func tableView(_ tableView: UITableView, prefetchRowsAt: [IndexPath]) {
+    for indexPath in prefetchRowsAt where cellDescriptors.count > indexPath.row {
+      let _ = cellDescriptors[indexPath.row].component?.asNode()
+    }
   }
 
   // MARK: - UITableViewDataSource Helper
@@ -163,8 +178,10 @@ open class UITableComponentViewController: UIBaseViewController,
   }
 
   /// Dequeues a *UITableComponentCell* for the component passed as argument.
-  public func dequeueCell(component: UIComponentProtocol,
-                          withReuseIdentifier id: String) -> UITableComponentCell {
+  public func dequeueCell(
+    component: UIComponentProtocol,
+    withReuseIdentifier id: String
+  ) -> UITableComponentCell {
     let cell = dequeueCell(withReuseIdentifier: id)
     component.delegate = self
     cell.install(component: component, width: tableView.bounds.size.width)
@@ -200,14 +217,18 @@ open class UITableComponentViewController: UIBaseViewController,
 
   /// Asks the delegate for a view object to display in the header of the specified section of
   /// the table view.
-  @objc open func tableView(_ tableView: UITableView,
-                            viewForHeaderInSection section: Int) -> UIView?{
+  @objc open func tableView(
+    _ tableView: UITableView,
+    viewForHeaderInSection section: Int
+  ) -> UIView?{
     return viewForHeader(inSection: section)
   }
 
   /// Asks the delegate for the height to use for the header of a particular section.
-  @objc open func tableView(_ tableView: UITableView,
-                            heightForHeaderInSection section: Int) -> CGFloat {
+  @objc open func tableView(
+    _ tableView: UITableView,
+    heightForHeaderInSection section: Int
+    ) -> CGFloat {
     return viewForHeader(inSection: section)?.bounds.size.height ?? 0
   }
 
@@ -245,12 +266,16 @@ open class UITableComponentViewController: UIBaseViewController,
   open func applyScrollRevealTransition(view: UIView) {
     if tableView.isDragging || tableView.isDecelerating {
       let alpha = view.alpha
+      let options: UIView.AnimationOptions = [
+        UIView.AnimationOptions.allowUserInteraction,
+        UIView.AnimationOptions.beginFromCurrentState]
       view.alpha = 0
-      UIView.animate(withDuration: 0.3,
-                     delay: 0,
-                     options: [.allowUserInteraction, .beginFromCurrentState],
-                     animations: { view.alpha = alpha },
-                     completion: { _ in view.alpha = alpha })
+      UIView.animate(
+        withDuration: 0.3,
+        delay: 0,
+        options: options,
+        animations: { view.alpha = alpha },
+        completion: { _ in view.alpha = alpha })
     }
   }
 
@@ -356,7 +381,7 @@ public class UITableComponentCell: UITableViewCell {
   /// *Internal only*
   public weak var delegate: UITableComponentCellDelegate?
 
-  public override init(style: UITableViewCellStyle, reuseIdentifier: String?) {
+  public override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
     super.init(style: style, reuseIdentifier: reuseIdentifier)
     selectionStyle = .none
   }
@@ -383,9 +408,10 @@ public class UITableComponentCell: UITableViewCell {
     // We purposely won't re-generate the node (by calling *asNode()*) because this has already
     // been called in the 'heightForRowAt' delegate method.
     // We just install the node in the right view hierarchy.
-    component.root.reconcile(in: contentView,
-                             size: CGSize(width: width, height: CGFloat.max),
-                             options: [.preventDelegateCallbacks])
+    component.root.reconcile(
+      in: contentView,
+      size: CGSize(width: width, height: CGFloat.max),
+      options: [.preventDelegateCallbacks])
 
     guard let componentView = contentView.subviews.first else {
       return
@@ -419,8 +445,10 @@ final public class UIComponentCellDescriptor {
   /// The cell reuse identifier (optional, automatically inferred).
   public let reuseIdentifier: String
 
-  public init<T: UIComponentProtocol>(component: T,
-                                      reuseIdentifier: String? = nil) {
+  public init<T: UIComponentProtocol>(
+    component: T,
+    reuseIdentifier: String? = nil
+  ) {
     let id = reuseIdentifier ?? String(describing: type(of: component))
     self.reuseIdentifier = id
     self.component = component

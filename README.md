@@ -1,11 +1,20 @@
-# Render Neutrino [![Swift](https://img.shields.io/badge/swift-4-orange.svg?style=flat)](#) [![Platform](https://img.shields.io/badge/platform-iOS-lightgrey.svg?style=flat)](#) [![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](https://opensource.org/licenses/MIT)
+# Render Neutrino [![Swift](https://img.shields.io/badge/swift-4.*-orange.svg?style=flat)](#) [![Platform](https://img.shields.io/badge/platform-iOS-lightgrey.svg?style=flat)](#) [![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](https://opensource.org/licenses/MIT)
 
 <img src="docs/assets/logo_new.png" width=150 alt="Render" align=right />
 
 Render is a declarative library for building efficient UIs on iOS inspired by [React](https://github.com/facebook/react).
 
+### Disclaimer
 
-*Render Neutrino* is the new version of Render, re-built from the ground up ([4.*  release here](https://github.com/alexdrone/Render/tree/classic))
+*Render* is a pretty monolithic and opinionated library.
+
+I have recently been working on splitting *Render* into some smaller and more customizable modules:
+
+* [CoreRender](https://github.com/alexdrone/CoreRender) More granular APIs for vdom reconciliation and layout, written in ObjC++ (*fully Swift-compatible*).
+* [YAS](https://github.com/alexdrone/YAS) Stand-alone YAML-based stylesheet engine.
+
+
+### Introduction
 
 * **Declarative:** Render uses a declarative API to define UI components. You simply describe the layout for your UI based on a set of inputs and the framework takes care of the rest (*diff* and *reconciliation* from virtual view hierarchy to the actual one under the hood).
 * **Flexbox layout:** Render includes the robust and battle-tested Facebook's [Yoga](https://facebook.github.io/yoga/) as default layout engine.
@@ -49,16 +58,6 @@ curl "https://raw.githubusercontent.com/alexdrone/Render/master/bin/dist.zip" > 
 ```
 
 Drag `RenderNeutrino.framework` in your project and add it as an embedded binary.
-
-### Installing the Tool-chain
-
-(Needs admin privileges)
-
-```
-sudo chown -R $(whoami) /usr/local/bin &&
-sudo curl "https://raw.githubusercontent.com/alexdrone/Render/master/tools/render-generate" > render-generate && mv render-generate /usr/local/bin/render-generate && chmod +x /usr/local/bin/render-generate &&
-sudo curl "https://raw.githubusercontent.com/alexdrone/Render/master/tools/render-watch.sh" > render-watch && mv render-watch /usr/local/bin/render-watch && chmod +x /usr/local/bin/render-watch
-```
 
 # Documentation:
 

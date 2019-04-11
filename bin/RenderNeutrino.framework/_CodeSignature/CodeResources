@@ -10,7 +10,7 @@
 		</data>
 		<key>Headers/RenderNeutrino-Swift.h</key>
 		<data>
-		2jmj7l5rSw0yVb/vlWAYkK/YBwk=
+		BCHHC0wZd1k6PSspgdRQLJGJtKY=
 		</data>
 		<key>Headers/RenderNeutrino.h</key>
 		<data>
@@ -54,23 +54,23 @@
 		</data>
 		<key>Info.plist</key>
 		<data>
-		EkViCWRQ6KCBXmasnrBn8CWdUGU=
+		FijzFuHJes+hxqcBTsddoo98iB8=
 		</data>
 		<key>Modules/RenderNeutrino.swiftmodule/i386.swiftdoc</key>
 		<data>
-		Q8YXhdxHYdjO4I0TTtvmaIKlXwo=
+		6yEWdTGncywJ4/38pb+RUQj5e/k=
 		</data>
 		<key>Modules/RenderNeutrino.swiftmodule/i386.swiftmodule</key>
 		<data>
-		Suxwj8vDIVAS9l9sa1XGKe1tqRo=
+		DU/P8MNkSWpASA2uvO1vBw0dft4=
 		</data>
 		<key>Modules/RenderNeutrino.swiftmodule/x86_64.swiftdoc</key>
 		<data>
-		jjcWfxxtBVqY8xS3xwpb4C9Niiw=
+		AdnWdV8+0rmhqLRZ/yTDsOgJDCw=
 		</data>
 		<key>Modules/RenderNeutrino.swiftmodule/x86_64.swiftmodule</key>
 		<data>
-		yJdu9iu1lXxtf/zMlGUuu86mByY=
+		08Lmgcv7/L5h+z2ixqwi8kFR20c=
 		</data>
 		<key>Modules/module.modulemap</key>
 		<data>
@@ -94,11 +94,11 @@
 		<dict>
 			<key>hash</key>
 			<data>
-			2jmj7l5rSw0yVb/vlWAYkK/YBwk=
+			BCHHC0wZd1k6PSspgdRQLJGJtKY=
 			</data>
 			<key>hash2</key>
 			<data>
-			47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=
+			Iq6bc+gygz5a94Lg2UN+Rq3ZVWWlb4GkqR2tQeON26M=
 			</data>
 		</dict>
 		<key>Headers/RenderNeutrino.h</key>
@@ -215,44 +215,44 @@
 		<dict>
 			<key>hash</key>
 			<data>
-			Q8YXhdxHYdjO4I0TTtvmaIKlXwo=
+			6yEWdTGncywJ4/38pb+RUQj5e/k=
 			</data>
 			<key>hash2</key>
 			<data>
-			lTJJNgoV9W6maZIkNk9hjXo2IzFCYGZ5yhT9yqGehP0=
+			4DGps7IB1067XmbylhrTKk9kzcAwouWutJ3DE4PBuMM=
 			</data>
 		</dict>
 		<key>Modules/RenderNeutrino.swiftmodule/i386.swiftmodule</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			Suxwj8vDIVAS9l9sa1XGKe1tqRo=
+			DU/P8MNkSWpASA2uvO1vBw0dft4=
 			</data>
 			<key>hash2</key>
 			<data>
-			zEnALw+Y4s+/dgYMpzB3KKQoCPv4STYrpoduIzke1/0=
+			xngVhMqZFkaqfxdzlwR3D0PX8gLCDuLhR515lBdWy8o=
 			</data>
 		</dict>
 		<key>Modules/RenderNeutrino.swiftmodule/x86_64.swiftdoc</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			jjcWfxxtBVqY8xS3xwpb4C9Niiw=
+			AdnWdV8+0rmhqLRZ/yTDsOgJDCw=
 			</data>
 			<key>hash2</key>
 			<data>
-			Eq1TRG2qPrlXbtPOvCn0qDopLCZnZ4PzvnTqB7nHtuM=
+			srQYOj2p8p6HZRH/AiuAGcEggHNVVDqP1cm76/uGC2w=
 			</data>
 		</dict>
 		<key>Modules/RenderNeutrino.swiftmodule/x86_64.swiftmodule</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			yJdu9iu1lXxtf/zMlGUuu86mByY=
+			08Lmgcv7/L5h+z2ixqwi8kFR20c=
 			</data>
 			<key>hash2</key>
 			<data>
-			tNKUS5xkw/B7agosZdZ5BBo0/oXTSlmLYDDcCOMVG64=
+			7AEYyjqEvWasLLXxwVwvev9EW9w1TUi+VO3bvmlruOg=
 			</data>
 		</dict>
 		<key>Modules/module.modulemap</key>
@@ -269,7 +269,7 @@
 	</dict>
 	<key>rules</key>
 	<dict>
-		<key>^</key>
+		<key>^.*</key>
 		<true/>
 		<key>^.*\.lproj/</key>
 		<dict>
@@ -300,24 +300,12 @@
 			<key>weight</key>
 			<real>11</real>
 		</dict>
-		<key>^</key>
-		<dict>
-			<key>weight</key>
-			<real>20</real>
-		</dict>
 		<key>^(.*/)?\.DS_Store$</key>
 		<dict>
 			<key>omit</key>
 			<true/>
 			<key>weight</key>
 			<real>2000</real>
-		</dict>
-		<key>^(Frameworks|SharedFrameworks|PlugIns|Plug-ins|XPCServices|Helpers|MacOS|Library/(Automator|Spotlight|LoginItems))/</key>
-		<dict>
-			<key>nested</key>
-			<true/>
-			<key>weight</key>
-			<real>10</real>
 		</dict>
 		<key>^.*</key>
 		<true/>
@@ -353,13 +341,6 @@
 			<true/>
 			<key>weight</key>
 			<real>20</real>
-		</dict>
-		<key>^[^/]+$</key>
-		<dict>
-			<key>nested</key>
-			<true/>
-			<key>weight</key>
-			<real>10</real>
 		</dict>
 		<key>^embedded\.provisionprofile$</key>
 		<dict>
